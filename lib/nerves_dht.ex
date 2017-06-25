@@ -55,7 +55,7 @@ defmodule NervesDht do
     sup |> Supervisor.start_child([handler, []])
   end
 
-  def call(sup) do
+  def call(_sup) do
     #    GenServer.call()
     {:error, "TODO"}
   end
