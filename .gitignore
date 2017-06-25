@@ -4,3 +4,6 @@
 erl_crash.dump
 *.ez
 *.beam
+
+priv/
+src/**/*.o
