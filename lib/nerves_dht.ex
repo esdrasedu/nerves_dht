@@ -5,15 +5,15 @@ defmodule NervesDht do
   Read DHT sensor (Digital Humidity and Temparature)
   Example usage:
   ```
-  iex> {:ok, dht} = NervesDht.start_link(2)
+  iex> {:ok, dht} = NervesDht.start_link(22, 2)
   :ok
-  iex> {humidity, temperature} = NervesDht.call(dht)
+  iex> {:ok, humidity, temperature} = NervesDht.call(dht)
   {:ok, 41.3, 27.22}
   ```
   You can use `add_handler` too listen event of sensor too.
   For example:
   ```
-  iex> {:ok, dht} = NervesDht.start_link(2)
+  iex> {:ok, dht} = NervesDht.start_link(22, 2)
   :ok
   iex> defmodule MyGenServer do
          use GenServer
@@ -39,9 +39,11 @@ defmodule NervesDht do
   ```
   """
 
-  def start_link(_pin) do
+  def start_link(sensor, pin) do
     child = worker(GenServer, [], restart: :temporary)
-    Supervisor.start_link([child], strategy: :simple_one_for_one)
+    {:ok, pid} = Supervisor.start_link([child], strategy: :simple_one_for_one)
+    NervesDht.Driver.start_link(pid, sensor, pin)
+    {:ok, pid}
   end
 
   def stop(sup) do
