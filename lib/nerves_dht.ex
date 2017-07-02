@@ -4,11 +4,13 @@ defmodule NervesDht do
   Read DHT sensor (Digital Humidity and Temparature)
   Example usage:
   ```
-  iex> require NervesDht
+  iex> defmodule MyGenServer do
+         use NervesDht
+       end
   :ok
-  iex> {:ok, dht} = NervesDht.start_link(2, 22)
+  iex> {:ok, dht} = MyGenServer.start_link(2, 22)
   :ok
-  iex> {:ok, humidity, temperature} = NervesDht.info(dht)
+  iex> {:ok, humidity, temperature} = MyGenServer.info(dht)
   {:ok, 41.3, 27.22}
   ```
   You can use `listen` too listen event of sensor too.
@@ -38,10 +40,10 @@ defmodule NervesDht do
 
   defmacro __using__(_opts) do
     quote do
-      use GenServer
 
-      def start_link(pin, sensor),
-        do: GenServer.start_link(__MODULE__, [pin, sensor])
+      def start_link(pin, sensor) do
+        GenServer.start_link(__MODULE__, [pin, sensor])
+      end
 
       def init([pin, sensor]) do
         Port.open({:spawn, "#{path()} #{sensor} #{pin}"}, [:binary, packet: 2])
@@ -50,7 +52,7 @@ defmodule NervesDht do
 
       def handle_info({_port, {:data, data}}, {:ok, _p, _s, _h, _t}) do
         states = :erlang.binary_to_term(data)
-        listen(states)
+        __MODULE__.listen(states)
         {:noreply, states}
       end
 
@@ -66,8 +68,8 @@ defmodule NervesDht do
 
       def listen(states), do: states
       defoverridable [listen: 1]
+
     end
   end
-
 
 end
