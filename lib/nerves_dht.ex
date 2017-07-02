@@ -1,72 +1,73 @@
 defmodule NervesDht do
-  import Supervisor.Spec
 
   @moduledoc ~S"""
   Read DHT sensor (Digital Humidity and Temparature)
   Example usage:
   ```
-  iex> {:ok, dht} = NervesDht.start_link(22, 2)
+  iex> require NervesDht
   :ok
-  iex> {:ok, humidity, temperature} = NervesDht.call(dht)
+  iex> {:ok, dht} = NervesDht.start_link(2, 22)
+  :ok
+  iex> {:ok, humidity, temperature} = NervesDht.info(dht)
   {:ok, 41.3, 27.22}
   ```
-  You can use `add_handler` too listen event of sensor too.
+  You can use `listen` too listen event of sensor too.
   For example:
   ```
-  iex> {:ok, dht} = NervesDht.start_link(22, 2)
-  :ok
   iex> defmodule MyGenServer do
-         use GenServer
+         use NervesDht
 
-         def start_link(state, opts \\ []) do
-           GenServer.start_link(__MODULE__, state, opts)
-         end
-
-         def handle_cast({:ok, h, t}, state) do
+         def listen({:ok, p, s, h, t}) do
            IO.puts("Listen event on MyGenServer")
-           IO.puts("Temperature: #{t} Humidity: #{h})\n")
-           {:noreply, state}
+           IO.puts("Pin: #{p}, Sensor: #{s}\n")
+           IO.puts("Temperature: #{t}, Humidity: #{h})\n")
          end
        end
   :ok
-  iex> NervesDht.add_handler(dht, MyGenServer)
+  iex> {:ok, dht} = MyGenServer.start_link(2, 22)
   :ok
   Listen event on MyGenServer
-  (Temperature: 41.3 Humidity: 27.20)
+  Pin: 2, Sensor: 22
+  (Temperature: 41.3, Humidity: 27.20)
 
   Listen event on MyGenServer
-  (Temperature: 41.2 Humidity: 27.25)
+  Pin: 2, Sensor: 22
+  (Temperature: 41.2, Humidity: 27.25)
   ```
   """
 
-  def start_link(sensor, pin) do
-    child = worker(GenServer, [], restart: :temporary)
-    {:ok, pid} = Supervisor.start_link([child], strategy: :simple_one_for_one)
-    NervesDht.Driver.start_link(pid, sensor, pin)
-    {:ok, pid}
-  end
+  defmacro __using__(_opts) do
+    quote do
+      use GenServer
 
-  def stop(sup) do
-    for {_, pid, _, _} <- Supervisor.which_children(sup) do
-      GenServer.stop(pid, :normal)
+      def start_link(pin, sensor),
+        do: GenServer.start_link(__MODULE__, [pin, sensor])
+
+      def init([pin, sensor]) do
+        Port.open({:spawn, "#{path()} #{sensor} #{pin}"}, [:binary, packet: 2])
+        {:ok, {:ok, pin, sensor, nil, nil}}
+      end
+
+      def handle_info({_port, {:data, data}}, {:ok, _p, _s, _h, _t}) do
+        states = :erlang.binary_to_term(data)
+        listen(states)
+        {:noreply, states}
+      end
+
+      def handle_call(:info, _from, state),
+        do: {:reply, state, state}
+
+      defp path, do: "#{:code.priv_dir(:nerves_dht)}/nerves_dht"
+
+      def info(pid) do
+        {:ok, _pin, _sensor, hum, tem} = GenServer.call(pid, :info)
+        {:ok, hum, tem}
+      end
+
+      def listen(states), do: states
+      defoverridable [listen: 1]
     end
-    Supervisor.stop(sup)
   end
 
-  def add_handler(sup, handler) do
-    sup |> Supervisor.start_child([handler, []])
-  end
-
-  def call(_sup) do
-    #    GenServer.call()
-    {:error, "TODO"}
-  end
-
-  def notify(sup, state) do
-    for {_, pid, _, _} <- Supervisor.which_children(sup) do
-      GenServer.cast(pid, state)
-    end
-    :ok
-  end
 
 end
