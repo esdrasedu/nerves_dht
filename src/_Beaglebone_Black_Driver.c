@@ -1,73 +1,52 @@
-// Copyright (c) 2014 Adafruit Industries
-// Author: Tony DiCola
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-#include <Python.h>
+#include "erl_comm.c"
+#include "erl_interface.h"
+#include "ei.h"
 
 #include "Beaglebone_Black/bbb_dht_read.h"
 
-// Wrap calling dht_read function and expose it as a DHT.read Python module & function.
-static PyObject* Beaglebone_Black_Driver_read(PyObject *self, PyObject *args)
-{
-	// Parse sensor and pin integer arguments.
-    int sensor, base, number;
-    if (!PyArg_ParseTuple(args, "iii", &sensor, &base, &number)) {
-        return NULL;
-    }
-    // Call dht_read and return result code, humidity, and temperature.
+typedef unsigned char byte;
+
+int main(int argc, char *argv[]) {
+
+  if (argc != 3) {
+    fprintf(stderr, "Usage: %s [DHT] [GPIO_Pin] \n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+
+  int sensor = atoi(argv[1]);
+  int pin = atoi(argv[2]);
+
+  ETERM * arr[5], *tuple;
+  unsigned char buf[BUFSIZ];
+
+  erl_init(NULL, 0);
+
+  for(;;){
+
     float humidity = 0, temperature = 0;
-    int result = bbb_dht_read(sensor, base, number, &humidity, &temperature);
-    return Py_BuildValue("iff", result, humidity, temperature);
-}
+    int result = bbb_dht_read(22, pin, &humidity, &temperature);
 
-// Boilerplate python module method list and initialization functions below.
+    if(result == DHT_SUCCESS){
 
-static PyMethodDef module_methods[] = {
-    {"read", Beaglebone_Black_Driver_read, METH_VARARGS, "Read DHT sensor value on a Beaglebone Black."},
-    {NULL, NULL, 0, NULL}
-};
+      arr[0] = erl_mk_atom("ok");
+      arr[1] = erl_mk_int(sensor);
+      arr[2] = erl_mk_int(pin);
+      arr[3] = erl_mk_float(humidity);
+      arr[4] = erl_mk_float(temperature);
 
-#if PY_MAJOR_VERSION > 2
-static struct PyModuleDef bbb_dht_module = {
-    PyModuleDef_HEAD_INIT,
-    "Beaglebone_Black_Driver",   // name of module
-    NULL,                      // module documentation, may be NULL
-    -1,                        // size of per-interpreter state of the module, or -1 if the module keeps state in global variables.
-    module_methods
-};
-#endif
+      tuple  = erl_mk_tuple(arr, 5);
 
-#if PY_MAJOR_VERSION > 2
-PyMODINIT_FUNC PyInit_Beaglebone_Black_Driver(void)
-#else
-PyMODINIT_FUNC initBeaglebone_Black_Driver(void)
-#endif
-{
-    #if PY_MAJOR_VERSION > 2
-      PyObject* module = PyModule_Create(&bbb_dht_module);
-    #else
-      Py_InitModule("Beaglebone_Black_Driver", module_methods);
-    #endif
+      erl_encode(tuple, buf);
 
-    #if PY_MAJOR_VERSION > 2
-       return module;
-    #else
-       return;
-    #endif
+      write_cmd(buf, erl_term_len(tuple));
+
+      erl_free_term(tuple);
+    }
+  }
+
+  return 1;
 }

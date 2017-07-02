@@ -12,6 +12,7 @@ endif
 
 # Set Erlang-specific compile and linker flags
 ERL_CFLAGS ?= -I$(ERL_EI_INCLUDE_DIR)
+$(info testando $(ERL_LDFLAGS))
 ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR) -lpthread -lerl_interface -lei
 
 SRC = src/common_dht_read.c
