@@ -13,12 +13,12 @@ typedef unsigned char byte;
 int main(int argc, char *argv[]) {
 
   if (argc != 3) {
-    fprintf(stderr, "Usage: %s [DHT] [GPIO_Pin] \n", argv[0]);
+    fprintf(stderr, "Usage: %s [GPIO_Pin] [DHT]\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 
-  int sensor = atoi(argv[1]);
-  int pin = atoi(argv[2]);
+  int pin = atoi(argv[1]);
+  int sensor = atoi(argv[2]);
 
   ETERM * arr[5], *tuple;
   unsigned char buf[BUFSIZ];
@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
     if(result == DHT_SUCCESS){
 
       arr[0] = erl_mk_atom("ok");
-      arr[1] = erl_mk_int(sensor);
-      arr[2] = erl_mk_int(pin);
+      arr[1] = erl_mk_int(pin);
+      arr[2] = erl_mk_int(sensor);
       arr[3] = erl_mk_float(humidity);
       arr[4] = erl_mk_float(temperature);
 
