@@ -50,7 +50,7 @@ defmodule NervesDht do
         {:ok, {:ok, pin, sensor, nil, nil}}
       end
 
-      def handle_info({_port, {:data, data}}, {:ok, _p, _s, _h, _t}) do
+      def handle_info({_port, {:data, data}}, _state) do
         states = :erlang.binary_to_term(data)
         __MODULE__.listen(states)
         {:noreply, states}
