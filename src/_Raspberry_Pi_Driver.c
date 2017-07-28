@@ -56,19 +56,7 @@ int main(int argc, char *argv[]) {
       write_cmd(buf, erl_term_len(tuple));
 
       erl_free_term(tuple);
-    } else {
-      arr[0] = erl_mk_atom("error");
-      arr[1] = erl_mk_int(result);
-
-      tuple  = erl_mk_tuple(arr, 2);
-
-      erl_encode(tuple, buf);
-
-      write_cmd(buf, erl_term_len(tuple));
-
-      erl_free_term(tuple);
     }
-
   }
 
   return 1;
