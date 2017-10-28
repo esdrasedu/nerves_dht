@@ -42,7 +42,7 @@ defmodule NervesDht do
     quote do
 
       def start_link({pin, sensor}, options \\ []) do
-        GenServer.start_link(__MODULE__, [{pin, sensor}], options)
+        GenServer.start_link(__MODULE__, {pin, sensor}, options)
       end
 
       def init({pin, sensor}) do
