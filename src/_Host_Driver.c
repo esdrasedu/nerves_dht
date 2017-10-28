@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 
     sleep(3);
 
-    if (0){
+    if (1){
 
       float humidity = (float)rand()/(float)(RAND_MAX/50);
       float temperature = (float)rand()/(float)(RAND_MAX/30);

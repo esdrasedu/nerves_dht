@@ -45,7 +45,7 @@ defmodule NervesDht do
         GenServer.start_link(__MODULE__, [{pin, sensor}], options)
       end
 
-      def init([{pin, sensor}]) do
+      def init({pin, sensor}) do
         Port.open({:spawn, "#{path()} #{pin} #{sensor}"}, [:binary, packet: 2])
         {:ok, {:ok, pin, sensor, nil, nil}}
       end
