@@ -8,7 +8,7 @@ defmodule NervesDht do
          use NervesDht
        end
   :ok
-  iex> {:ok, dht} = MyGenServer.start_link(2, 22)
+  iex> {:ok, dht} = MyGenServer.start_link({2, 22})
   :ok
   iex> {:ok, humidity, temperature} = MyGenServer.info(dht)
   {:ok, 41.3, 27.22}
@@ -26,7 +26,7 @@ defmodule NervesDht do
          end
        end
   :ok
-  iex> {:ok, dht} = MyGenServer.start_link(2, 22)
+  iex> {:ok, dht} = MyGenServer.start_link({2, 22})
   :ok
   Listen event on MyGenServer
   Pin: 2, Sensor: 22
@@ -41,11 +41,11 @@ defmodule NervesDht do
   defmacro __using__(_opts) do
     quote do
 
-      def start_link(pin, sensor) do
-        GenServer.start_link(__MODULE__, [pin, sensor])
+      def start_link({pin, sensor}, options \\ []) do
+        GenServer.start_link(__MODULE__, [{pin, sensor}], options)
       end
 
-      def init([pin, sensor]) do
+      def init([{pin, sensor}]) do
         Port.open({:spawn, "#{path()} #{pin} #{sensor}"}, [:binary, packet: 2])
         {:ok, {:ok, pin, sensor, nil, nil}}
       end
