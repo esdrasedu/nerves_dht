@@ -52,7 +52,7 @@ OBJ = $(SRC:.c=.o)
 all: priv priv/nerves_dht
 
 %.o: %.c
-	$(CC) -o $@ $< -c $(ERL_CFLAGS) $(CFLAGS)
+	$(CC) -o $@ $^ -c $(ERL_CFLAGS) $(CFLAGS)
 
 priv:
 	mkdir -p priv
