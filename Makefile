@@ -22,15 +22,15 @@ ifeq ($(MIX_TARGET), rpi)
 	SRC += $(wildcard src/Raspberry_Pi/*.c) src/_Raspberry_Pi_Driver.c
 endif
 
+ifeq ($(MIX_TARGET), rpi0)
+	SRC += $(wildcard src/Raspberry_Pi/*.c) src/_Raspberry_Pi_Driver.c
+endif
+
 ifeq ($(MIX_TARGET), rpi2)
 	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
 endif
 
 ifeq ($(MIX_TARGET), rpi3)
-	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
-endif
-
-ifeq ($(MIX_TARGET), rpi0)
 	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
 endif
 
