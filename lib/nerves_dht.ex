@@ -18,7 +18,6 @@ defmodule NervesDht do
   ```
   iex> defmodule MyGenServer do
          use NervesDht
-
          def listen({:ok, p, s, h, t}) do
            IO.puts("Listen event on MyGenServer")
            IO.puts("Pin: #{p}, Sensor: #{s}\n")
@@ -31,7 +30,6 @@ defmodule NervesDht do
   Listen event on MyGenServer
   Pin: 2, Sensor: 22
   (Temperature: 41.3, Humidity: 27.20)
-
   Listen event on MyGenServer
   Pin: 2, Sensor: 22
   (Temperature: 41.2, Humidity: 27.25)
