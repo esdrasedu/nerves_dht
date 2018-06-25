@@ -4,7 +4,8 @@ defmodule NervesDht.Mixfile do
   def project do
     [app: :nerves_dht,
      version: "0.1.0",
-     elixir: "~> 1.5",
+     description: description(),
+     package: package(),
      compilers: [:elixir_make] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -16,6 +17,24 @@ defmodule NervesDht.Mixfile do
   end
 
   defp deps do
-    [{:elixir_make, "~> 0.4", runtime: false}]
+    [
+      {:elixir_make, "~> 0.4"},
+      {:ex_doc, ">= 0.0.0", only: :dev}
+    ]
   end
+
+  defp description() do
+    "Drive of DHT 11 and DHT 22 (temperature and humidity sensor)"
+  end
+
+  defp package() do
+    [
+      name: "nerves_dht",
+      files: ["src/**/*.h", "src/**/*.c", "lib", "priv", "test", "config", "mix.exs", "README.md", "LICENSE", "Makefile"],
+      maintainers: ["Esdras Eduardo"],
+      licenses: ["GNU 3.0"],
+      links: %{"GitHub" => "https://github.com/esdrasedu/nerves_dht"}
+    ]
+  end
+
 end
