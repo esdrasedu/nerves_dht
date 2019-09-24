@@ -34,6 +34,10 @@ ifeq ($(MIX_TARGET), rpi3)
 	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
 endif
 
+ifeq ($(MIX_TARGET), rpi4)
+	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
+endif
+
 ifeq ($(MIX_TARGET), rpi3a)
 	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
 endif

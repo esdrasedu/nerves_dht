@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   for(;;){
 
     float humidity = 0, temperature = 0;
-    int result = pi_dht_read(22, pin, &humidity, &temperature);
+    int result = pi_dht_read(sensor, pin, &humidity, &temperature);
 
     if(result == DHT_SUCCESS){
 
