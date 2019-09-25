@@ -38,6 +38,7 @@ defmodule NervesDht do
 
   defmacro __using__(_opts) do
     quote do
+      use GenServer
 
       def start_link({pin, sensor}, options \\ []) do
         GenServer.start_link(__MODULE__, {pin, sensor}, options)
@@ -48,20 +49,28 @@ defmodule NervesDht do
         {:ok, {:ok, pin, sensor, nil, nil}}
       end
 
-      def handle_info({_port, {:data, data}}, _state) do
+      @impl true
+      def handle_info({_port, {:data, data}}, prev_state) do
         states = :erlang.binary_to_term(data)
         __MODULE__.listen(states)
-        {:noreply, states}
+
+        # Only keep last known temp around
+        state = if elem(states, 0) == :ok, do: states, else: prev_state
+
+        {:noreply, state}
       end
 
-      def handle_call(:info, _from, state),
-        do: {:reply, state, state}
+      @impl true
+      def handle_call(:info, _from, state), do: {:reply, state, state}
 
       defp path, do: "#{:code.priv_dir(:nerves_dht)}/nerves_dht"
 
       def info(pid) do
-        {:ok, _pin, _sensor, hum, tem} = GenServer.call(pid, :info)
-        {:ok, hum, tem}
+        case GenServer.call(pid, :info) do
+          {:ok, _pin, _sensor, hum, tem} ->
+            {:ok, hum, tem}
+          e -> e
+        end
       end
 
       def listen(states), do: states

@@ -7,7 +7,7 @@ defmodule NervesDht.Mixfile do
      description: description(),
      package: package(),
      compilers: [:elixir_make] ++ Mix.compilers,
-     build_embedded: Mix.env == :prod,
+     build_embedded: true,
      start_permanent: Mix.env == :prod,
      deps: deps()]
   end
@@ -18,7 +18,7 @@ defmodule NervesDht.Mixfile do
 
   defp deps do
     [
-      {:elixir_make, "~> 0.4"},
+      {:elixir_make, "~> 0.6"},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
