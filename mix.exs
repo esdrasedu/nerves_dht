@@ -3,7 +3,7 @@ defmodule NervesDht.Mixfile do
 
   def project do
     [app: :nerves_dht,
-     version: "0.1.0",
+     version: "0.1.1",
      description: description(),
      package: package(),
      compilers: [:elixir_make] ++ Mix.compilers,
