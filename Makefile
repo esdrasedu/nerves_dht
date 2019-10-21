@@ -1,3 +1,8 @@
+TOP := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+
+PREFIX = $(MIX_COMPILE_PATH)/../priv
+BUILD  = $(MIX_COMPILE_PATH)/../obj
+
 # Look for the EI library and header files
 # For crosscompiled builds, ERL_EI_INCLUDE_DIR and ERL_EI_LIBDIR must be
 # passed into the Makefile.
@@ -14,59 +19,43 @@ endif
 ERL_CFLAGS ?= -I$(ERL_EI_INCLUDE_DIR)
 ERL_LDFLAGS ?= -L$(ERL_EI_LIBDIR) -lerl_interface -lei
 
-SRC = src/common_dht_read.c
 LDFLAGS +=
 CFLAGS ?= -O2 -Wall -Wextra -Wno-unused-parameter
 
-ifeq ($(MIX_TARGET), rpi)
-	SRC += $(wildcard src/Raspberry_Pi/*.c) src/_Raspberry_Pi_Driver.c
+RPI := rpi rpi0
+RPI2 := rpi2 rpi3 rpi3a rpi4
+BBB := bbb
+
+ifneq ($(filter $(MIX_TARGET),$(RPI)),)
+	SRC += $(wildcard src/Raspberry_Pi/*.c) src/_Raspberry_Pi_Driver.c src/common_dht_read.c
+else ifneq ($(filter $(MIX_TARGET),$(RPI2)),)
+	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c src/common_dht_read.c
+else ifneq ($(filter $(MIX_TARGET),$(BBB)),)
+	SRC += $(wildcard src/Beaglebone_Black/*.c) src/_Beaglebone_Black_Driver.c src/common_dht_read.c
+else ifeq ($(MIX_TARGET), host)
+	SRC = src/_Host_Driver.c
+	CC = gcc
 endif
 
-ifeq ($(MIX_TARGET), rpi0)
-	SRC += $(wildcard src/Raspberry_Pi/*.c) src/_Raspberry_Pi_Driver.c
-endif
+CC ?= $(CROSSCOMPILER)-gcc
 
-ifeq ($(MIX_TARGET), rpi2)
-	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
-endif
+OBJ = $(foreach file,$(SRC),$(BUILD)/$(notdir $(file:.c=.o)))
 
-ifeq ($(MIX_TARGET), rpi3)
-	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
-endif
+calling_from_make:
+	mix compile
 
-ifeq ($(MIX_TARGET), rpi4)
-	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
-endif
+all: $(PREFIX)/nerves_dht;
 
-ifeq ($(MIX_TARGET), rpi3a)
-	SRC += $(wildcard src/Raspberry_Pi_2/*.c) src/_Raspberry_Pi_2_Driver.c
-endif
+%.o:
+	$(CC) -c $(ERL_CFLAGS) $(CFLAGS) -o $@ $(filter %$(notdir $(basename $@)).c, $(SRC))
 
-ifeq ($(MIX_TARGET), bbb)
-	SRC += $(wildcard src/Beaglebone_Black/*.c) src/_Beaglebone_Black_Driver.c
-endif
+$(PREFIX) $(BUILD):
+	mkdir -p $@
 
-ifeq ($(MIX_TARGET), host)
-	SRC += src/_Host_Driver.c
-	CC ?= gcc
-else
-	CC ?= $(CROSSCOMPILER)-gcc
-endif
-
-OBJ = $(SRC:.c=.o)
-
-.PHONY: all clean
-
-all: priv priv/nerves_dht
-
-%.o: %.c
-	$(CC) -o $@ $^ -c $(ERL_CFLAGS) $(CFLAGS)
-
-priv:
-	mkdir -p priv
-
-priv/nerves_dht: $(OBJ)
-	$(CC) $^ -o $@ $(ERL_LDFLAGS) $(LDFLAGS) -lpthread
+$(PREFIX)/nerves_dht: $(BUILD) $(PREFIX) $(OBJ)
+	$(CC) $(wildcard $(BUILD)/*.o) -o $@ $(ERL_LDFLAGS) $(LDFLAGS) -lpthread
 
 clean:
-	rm -f priv/nerves_dht src/*.o src/**/*.o
+	if [ -n "$(MIX_COMPILE_PATH)" ]; then $(RM) -r $(BUILD); $(RM) -r $(PREFIX); fi
+
+.PHONY: all clean calling_from_make

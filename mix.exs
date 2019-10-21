@@ -7,6 +7,8 @@ defmodule NervesDht.Mixfile do
      description: description(),
      package: package(),
      compilers: [:elixir_make] ++ Mix.compilers,
+     make_targets: ["all"],
+     make_clean: ["clean"],
      build_embedded: true,
      start_permanent: Mix.env == :prod,
      deps: deps()]
